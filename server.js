@@ -54,6 +54,14 @@ const Group = mongoose.model('Group', new mongoose.Schema({
     createdDate: { type: Date, default: Date.now }
 }));
 
+// --- NEW CHAT SCHEMA ---
+const GroupChat = mongoose.model('GroupChat', new mongoose.Schema({
+    groupName: String,
+    username: String,
+    message: String,
+    timestamp: { type: Date, default: Date.now }
+}));
+
 // --- ROUTES ---
 
 app.get('/', (req, res) => { 
@@ -279,6 +287,29 @@ app.post('/api/group/leave', async (req, res) => {
         res.json({ success: true });
     } catch(e) {
         res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// --- NEW CHAT ROUTES ---
+app.get('/api/group-chat', async (req, res) => {
+    try {
+        const { groupName } = req.query;
+        // Fetch last 50 messages for this group
+        const messages = await GroupChat.find({ groupName }).sort({ timestamp: 1 }).limit(50);
+        res.json(messages);
+    } catch(e) {
+        res.json([]);
+    }
+});
+
+app.post('/api/group-chat', async (req, res) => {
+    try {
+        const { groupName, username, message } = req.body;
+        const newMsg = new GroupChat({ groupName, username, message });
+        await newMsg.save();
+        res.json({ success: true });
+    } catch(e) {
+        res.status(500).json({ success: false });
     }
 });
 
